@@ -6,6 +6,8 @@ from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from models import User, Profile, Event, Attendee, CalendarShare, db
 import bcrypt
+from validation import is_valid_email, is_valid_password
+
 
 # Creating Flask app and configuring JWT secret key
 app = Flask(__name__)
@@ -22,45 +24,55 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-# Parsing request arguments for email and password
+# Move the definition of the parser object to a global scope
 parser = reqparse.RequestParser()
+parser.add_argument('name', type=str, required=False, help='name is required')
 parser.add_argument('email', type=str, required=True, help='Email is required')
 parser.add_argument('password', type=str, required=True, help='Password is required')
 
 # Resource for user login
 class Login(Resource):
     def post(self):
-        data = parser.parse_args() # Parsing request arguments
+        data = parser.parse_args()  # Use the global parser object for login
         email = data['email']
         password = data['password']
 
-        user = User.query.filter_by(email=email).first() # Querying user by email
+        user = User.query.filter_by(email=email).first()  # Querying user by email
 
         if not user or not bcrypt.checkpw(password.encode('utf-8'), user.password):
-            return make_response(jsonify({'message': 'Invalid email or password'}), 401) # Returning unauthorized access if email or password is incorrect
+            return make_response(jsonify({'message': 'Invalid email or password'}), 401)  # Returning unauthorized access if email or password is incorrect
 
-        access_token = create_access_token(identity=email) # Creating access token for the user
-        return make_response(jsonify({'access_token': access_token}), 200) # Returning success response with access token
+        access_token = create_access_token(identity=email)  # Creating access token for the user
+        return make_response(jsonify({'access_token': access_token}), 200)  # Returning success response with access token
 
 # Resource for user sign up
 class SignUp(Resource):
     def post(self):
-        data = parser.parse_args() # Parsing request arguments
+        data = parser.parse_args()  # Use the global parser object for sign-up
+        name = data['name']
         email = data['email']
         password = data['password']
 
-        user = User.query.filter_by(email=email).first() # Querying user by email
+        user = User.query.filter_by(email=email).first()  # Querying user by email
 
+        if not is_valid_email(email):
+            return make_response(jsonify({'message': 'Invalid email address'}), 400)
+        
         if user:
-            return make_response(jsonify({'message': 'User already exists'}), 400) # Returning bad request if user already exists
+            return make_response(jsonify({'message': 'User already exists'}), 400)  # Returning bad request if user already exists
+        
+        if not is_valid_password(password):
+            return make_response(jsonify({'message': 'Invalid password'}), 400)
+            
 
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()) # Hashing password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())  # Hashing password
 
-        new_user = User(email=email, password=hashed_password) # Creating new user with hashed password
-        db.session.add(new_user) # Adding user to the database session
-        db.session.commit() # Committing user to the database
+        new_user = User(name=name, email=email, password=hashed_password)  # Creating new user with hashed password
+        db.session.add(new_user)  # Adding user to the database session
+        db.session.commit()  # Committing user to the database
 
-        return make_response(jsonify({'message': 'User created successfully'}), 201) # Returning success response with created user message
+        return make_response(jsonify({'message': 'User created successfully'}), 201)  # Returning success response with created user message
+
 
 # Resource for user logout
 class Logout(Resource):
@@ -89,6 +101,6 @@ api.add_resource(Login, '/login')
 api.add_resource(SignUp, '/signup')
 api.add_resource(Logout, '/logout')
 
-if __name__ == 'main':
-    app.run(port = 5555, debug= True)
- 
+# Run the Flask app
+if __name__ == '__main__':
+    app.run(debug=True, port=5555)
