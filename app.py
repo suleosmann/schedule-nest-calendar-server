@@ -53,3 +53,23 @@ class Logout(Resource):
     def post(self):
         email = get_jwt_identity()
         return make_response(jsonify({'message': 'Logged out successfully'}), 200)
+    
+
+# Error handling for 404 - Not Found
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
+
+# Error handling for 400 - Bad Request
+@app.errorhandler(400)
+def bad_request(error):
+    return make_response(jsonify({'error': 'Bad request'}), 400)
+
+# Error handling for 401 - Unauthorized
+@app.errorhandler(401)
+def unauthorized(error):
+    return make_response(jsonify({'error': 'Unauthorized access'}), 401)
+
+api.add_resource(Login, '/login')
+api.add_resource(SignUp, '/signup')
+api.add_resource(Logout, '/logout')
