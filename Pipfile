@@ -14,6 +14,7 @@ flask-cors = "*"
 flask-migrate = "*"
 email-validator = "*"
 faker = "*"
+flask-bcrypt = "*"
 
 [dev-packages]
 
