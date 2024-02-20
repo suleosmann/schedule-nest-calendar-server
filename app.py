@@ -182,7 +182,7 @@ api.add_resource(SignUp, '/signup')
 api.add_resource(Logout, '/logout')
 api.add_resource(UserInfo, '/user/<int:user_id>')
 api.add_resource(EditUser, '/edit_user/<int:user_id>')
-api.add_resource(DeleteUser, '/delete_user/<ini:user_id>')
+api.add_resource(DeleteUser, '/delete_user/<int:user_id>')
 
 # Run the Flask app
 if __name__ == '__main__':
