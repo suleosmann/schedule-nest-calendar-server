@@ -6,21 +6,10 @@ db = SQLAlchemy()
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
 
-    # Serializing the User model with the Profile model
-    serialize_rules = ('-profiles.user',)
-
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(50), nullable = False)
     email = db.Column(db.String(100), unique = True, nullable = False)
-    password = db.Column(db.String)
-
-class Profile(db.Model, SerializerMixin):
-    __tablename__ = 'profiles'
-
-    # Serialization rules with the Users model
-    serialize_rules = ('-user.profiles',)
-
-    id = db.Column(db.Integer, primary_key = True)
+    password = db.Column(db.String, nullable=False)
     image = db.Column(db.LargeBinary) 
     phone_number = db. Column(db.String(20))
     profession = db.Column(db.String(100))

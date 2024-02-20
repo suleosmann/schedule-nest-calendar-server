@@ -4,7 +4,7 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from models import User, Profile, Event, Attendee, CalendarShare, db
+from models import User, Event, Attendee, CalendarShare, db
 import bcrypt
 from validation import is_valid_email, is_valid_password
 
@@ -24,11 +24,15 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+
+############################### Authentification ###########################################################################
 # Move the definition of the parser object to a global scope
 parser = reqparse.RequestParser()
 parser.add_argument('name', type=str, required=False, help='name is required')
 parser.add_argument('email', type=str, required=True, help='Email is required')
 parser.add_argument('password', type=str, required=True, help='Password is required')
+
+
 
 # Resource for user login
 class Login(Resource):
@@ -81,6 +85,82 @@ class Logout(Resource):
         email = get_jwt_identity() # Getting user email from access token
         return make_response(jsonify({'message': 'Logged out successfully'}), 200) # Returning success response with logged out message
 
+
+##################################################################################################
+
+#####################################Profile endpoints#########################################################
+
+class UserInfo(Resource):
+    def get(self, user_id):
+        # Query user information
+        user = User.query.get(user_id)
+
+        if user is None:
+            return {'message': 'User not found'}, 404
+
+        # Serialize user object
+        serialized_user = user.to_dict()
+
+        # Construct the response dictionary
+        response = {
+            'name': serialized_user.get('name'),
+            'email': serialized_user.get('email'),
+            'image': serialized_user.get('image'),
+            'phone_number': serialized_user.get('phone_number'),
+            'profession': serialized_user.get('profession'),
+            'about': serialized_user.get('about')
+        }
+
+        return response, 200
+
+
+
+class EditUser(Resource):
+    def patch(self, user_id):
+        # Query user information
+        user = User.query.get(user_id)
+        
+        if user is None:
+            return {'message': 'User not found'}, 404
+
+        # Update user attributes based on request data
+        data = request.json  # Assuming JSON data is sent in the request
+        if 'name' in data:
+            user.name = data['name']
+        if 'email' in data:
+            user.email = data['email']
+        if 'image' in data:
+            user.image = data['image']
+        if 'phone_number' in data:
+            user.phone_number = data['phone_number']
+        if 'profession' in data:
+            user.profession = data['profession']
+        if 'about' in data:
+            user.about = data['about']
+        
+        # Commit the changes to the database
+        db.session.commit()
+
+        # Return a success message
+        return {'message': 'User updated successfully'}, 200
+
+class DeleteUser(Resource):
+    def delete(self, user_id):
+        # Query the user by user_id
+        user = User.query.get(user_id)
+        
+        # Check if the user exists
+        if user is None:
+            return {'message': 'User not found'}, 404
+        
+        # Delete the user from the database
+        db.session.delete(user)
+        db.session.commit()
+        
+        # Return a success message
+        return {'message': 'User deleted successfully'}, 200
+
+#########################################################################################################################
 # Error handling for 404 - Not Found
 @app.errorhandler(404)
 def not_found(error):
@@ -100,6 +180,9 @@ def unauthorized(error):
 api.add_resource(Login, '/login')
 api.add_resource(SignUp, '/signup')
 api.add_resource(Logout, '/logout')
+api.add_resource(UserInfo, '/user/<int:user_id>')
+api.add_resource(EditUser, '/edit_user/<int:user_id>')
+api.add_resource(DeleteUser, '/delete_user/<ini:user_id>')
 
 # Run the Flask app
 if __name__ == '__main__':
