@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, make_response
 from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from models import User
+from models import User,db
 import bcrypt
 
 app = Flask(__name__)
@@ -27,3 +27,22 @@ class Login(Resource):
 
         access_token = create_access_token(identity=email)
         return make_response(jsonify({'access_token': access_token}), 200)
+    
+class SignUp(Resource):
+    def post(self):
+        data = parser.parse_args()
+        email = data['email']
+        password = data['password']
+
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            return make_response(jsonify({'message': 'User already exists'}), 400)
+
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        new_user = User(email=email, password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+
+        return make_response(jsonify({'message': 'User created successfully'}), 201)
