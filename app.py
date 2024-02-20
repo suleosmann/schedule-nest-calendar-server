@@ -46,3 +46,10 @@ class SignUp(Resource):
         db.session.commit()
 
         return make_response(jsonify({'message': 'User created successfully'}), 201)
+    
+
+class Logout(Resource):
+    @jwt_required()
+    def post(self):
+        email = get_jwt_identity()
+        return make_response(jsonify({'message': 'Logged out successfully'}), 200)
