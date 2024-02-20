@@ -1,14 +1,26 @@
 from flask import Flask, request, jsonify, make_response
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_cors import CORS
 from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from models import User
+from models import User, Profile, Event, Attendee, CalendarShare, db
 import bcrypt
 
 # Creating Flask app and configuring JWT secret key
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'dingiswayo_calendar_schedular'  
 api = Api(app)
 jwt = JWTManager(app)
+
+migrate = Migrate(app, db)
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
 
 # Parsing request arguments for email and password
 parser = reqparse.RequestParser()
@@ -76,3 +88,7 @@ def unauthorized(error):
 api.add_resource(Login, '/login')
 api.add_resource(SignUp, '/signup')
 api.add_resource(Logout, '/logout')
+
+if __name__ == 'main':
+    app.run(port = 5555, debug= True)
+ 
