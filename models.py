@@ -66,6 +66,9 @@ class CalendarShare(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key = True) 
     calendar_owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # ID of the user who owns the calendar
     access_granted_to_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # ID of the user who is granted access   
-    user = db.relationship('User', backref='calendarshares')
+    
+    # Creating relationships
+    owner = db.relationship('User', foreign_keys=[calendar_owner_id], backref='calendar_owner')
+    granted_to = db.relationship('User', foreign_keys=[access_granted_to_id], backref='calendar_granted_to')
 
 
