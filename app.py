@@ -6,7 +6,7 @@ from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from models import User, Profile, Event, Attendee, CalendarShare, db
 import bcrypt
-from validation import is_valid_email, is_valid_password
+from validation import is_valid_email, is_valid_password, is_valid_name
 
 
 # Creating Flask app and configuring JWT secret key
@@ -58,6 +58,8 @@ class SignUp(Resource):
         if not is_valid_email(email):
             return make_response(jsonify({'message': 'Invalid email address'}), 400)
         
+        if not is_valid_name(name):
+            return make_response(jsonify({'message': "Name should only contain letters"}), 400)
         if user:
             return make_response(jsonify({'message': 'User already exists'}), 400)  # Returning bad request if user already exists
         

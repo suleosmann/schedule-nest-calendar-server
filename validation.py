@@ -44,3 +44,13 @@ def is_valid_password(password):
         return False
     
     return True
+
+
+def is_valid_name(name):
+    # Name should not be empty
+    if not name:
+        return False
+    
+    # Name should contain only letters, spaces, or hyphens
+    pattern = "^[a-zA-Z]+(?:[' -][a-zA-Z]+)*$"
+    return re.match(pattern, name) is not None
