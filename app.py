@@ -6,7 +6,9 @@ from flask_restful import Api, Resource, reqparse
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from models import User, Event, Attendee, CalendarShare, db
 import bcrypt
-from validation import is_valid_email, is_valid_password
+from validation import is_valid_email, is_valid_password, validate_phone_number
+from flask_bcrypt import check_password_hash, generate_password_hash
+
 
 
 # Creating Flask app and configuring JWT secret key
@@ -85,6 +87,46 @@ class Logout(Resource):
         email = get_jwt_identity() # Getting user email from access token
         return make_response(jsonify({'message': 'Logged out successfully'}), 200) # Returning success response with logged out message
 
+from validation import is_valid_email, is_valid_password
+
+class UpdatePassword(Resource):
+    def patch(self):
+        # Parse the request data
+        data = request.json
+        
+        # Validate request data
+        if 'email' not in data or 'new_password' not in data or 'confirm_new_password' not in data:
+            return {'message': 'Incomplete request data'}, 400
+        
+        email = data['email']
+        new_password = data['new_password']
+        confirm_new_password = data['confirm_new_password']
+        
+        # Validate email format
+        if not is_valid_email(email):
+            return {'message': 'Invalid email format'}, 400
+        
+        # Validate password format
+        if not is_valid_password(new_password):
+            return {'message': 'Invalid password format'}, 400
+        
+        # Check if passwords match
+        if new_password != confirm_new_password:
+            return {'message': 'Passwords do not match'}, 400
+        
+        # Query user by email
+        user = User.query.filter_by(email=email).first()
+        if user is None:
+            return {'message': 'User not found'}, 404
+        
+        # Update user's password
+        user.password = generate_password_hash(new_password)
+        
+        # Commit changes to the database
+        db.session.commit()
+        
+        return {'message': 'Password updated successfully'}, 200
+
 
 ##################################################################################################
 
@@ -125,24 +167,30 @@ class EditUser(Resource):
 
         # Update user attributes based on request data
         data = request.json  # Assuming JSON data is sent in the request
-        if 'name' in data:
-            user.name = data['name']
-        if 'email' in data:
-            user.email = data['email']
-        if 'image' in data:
-            user.image = data['image']
-        if 'phone_number' in data:
-            user.phone_number = data['phone_number']
-        if 'profession' in data:
-            user.profession = data['profession']
-        if 'about' in data:
-            user.about = data['about']
+        if data:
+            if 'name' in data:
+                user.name = data['name']
+            if 'email' in data:
+                user.email = data['email']
+            if 'image' in data:
+                user.image = data['image']
+            if 'phone_number' in data:
+                if validate_phone_number(data['phone_number']):
+                    user.phone_number = data['phone_number']
+                else:
+                    return {'message': 'Invalid phone number format'}, 400
+            if 'profession' in data:
+                user.profession = data['profession']
+            if 'about' in data:
+                user.about = data['about']
         
-        # Commit the changes to the database
-        db.session.commit()
+            # Commit the changes to the database
+            db.session.commit()
 
-        # Return a success message
-        return {'message': 'User updated successfully'}, 200
+            # Return a success message
+            return {'message': 'User updated successfully'}, 200
+        else:
+            return {'message': 'No data provided'}, 400
 
 class DeleteUser(Resource):
     def delete(self, user_id):
@@ -183,6 +231,7 @@ api.add_resource(Logout, '/logout')
 api.add_resource(UserInfo, '/user/<int:user_id>')
 api.add_resource(EditUser, '/edit_user/<int:user_id>')
 api.add_resource(DeleteUser, '/delete_user/<int:user_id>')
+api.add_resource(UpdatePassword, '/update_password')
 
 # Run the Flask app
 if __name__ == '__main__':

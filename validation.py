@@ -44,3 +44,15 @@ def is_valid_password(password):
         return False
     
     return True
+
+
+def validate_phone_number(phone_number):
+    # Check if phone number starts with the correct prefixes and has the correct length
+    if phone_number.startswith('+2541') or phone_number.startswith('+2547'):
+        # Remove the "+" sign and spaces
+        phone_number = phone_number.replace('+', '').replace(' ', '')
+        # Check if the remaining characters are digits and the total length is 12 (excluding the prefix)
+        if phone_number.isdigit() and len(phone_number) == 12:
+            return True
+    return False
+
