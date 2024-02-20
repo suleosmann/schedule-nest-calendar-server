@@ -64,7 +64,7 @@ class SignUp(Resource):
             return make_response(jsonify({'message': 'User already exists'}), 400)  # Returning bad request if user already exists
         
         if not is_valid_password(password):
-            return make_response(jsonify({'message': 'Invalid password'}), 400)
+            return make_response(jsonify({'message': 'Password must include one of uppercase letter, lowercase letter, special character and digit'}), 400)
             
 
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())  # Hashing password
