@@ -133,6 +133,7 @@ class UpdatePassword(Resource):
 #####################################Profile endpoints#########################################################
 
 class UserInfo(Resource):
+    @jwt_required()
     def get(self, user_id):
         # Query user information
         user = User.query.get(user_id)
@@ -156,9 +157,13 @@ class UserInfo(Resource):
         return response, 200
 
 
-
 class EditUser(Resource):
+    @jwt_required()
     def patch(self, user_id):
+        current_user_id = get_jwt_identity()  # Assuming user ID is stored in the JWT token as a string
+        if current_user_id != str(user_id):
+            return {'message': 'Unauthorized access'}, 401
+
         # Query user information
         user = User.query.get(user_id)
         
@@ -192,8 +197,14 @@ class EditUser(Resource):
         else:
             return {'message': 'No data provided'}, 400
 
+
 class DeleteUser(Resource):
+    @jwt_required()
     def delete(self, user_id):
+        current_user_id = get_jwt_identity()
+        if current_user_id != str(user_id):
+            return {'message': 'Unauthorized access'}, 401
+
         # Query the user by user_id
         user = User.query.get(user_id)
         
@@ -207,6 +218,7 @@ class DeleteUser(Resource):
         
         # Return a success message
         return {'message': 'User deleted successfully'}, 200
+
 
 #########################################################################################################################
 # Error handling for 404 - Not Found
