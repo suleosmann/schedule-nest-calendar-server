@@ -8,6 +8,7 @@ from models import User, Event, Attendee, CalendarShare, db
 import bcrypt
 from validation import is_valid_email, is_valid_password, validate_phone_number
 from flask_bcrypt import check_password_hash, generate_password_hash
+from recurrence_helper import generate_recurrences
 
 
 
@@ -47,8 +48,12 @@ class Login(Resource):
 
         user = User.query.filter_by(email=email).first()  # Querying user by email
 
-        if not user or not bcrypt.checkpw(password.encode('utf-8'), user.password):
-            return make_response(jsonify({'message': 'Invalid email or password'}), 401)  # Returning unauthorized access if email or password is incorrect
+        if not user or not isinstance(user.password, bytes):
+            return make_response(jsonify({'message': 'Invalid email or password'}), 401)
+
+        # Ensure user.password is of type bytes
+        if not bcrypt.checkpw(password.encode('utf-8'), user.password):
+            return make_response(jsonify({'message': 'Invalid email or password'}), 401)
 
         access_token = create_access_token(identity=email)  # Creating access token for the user
         return make_response(jsonify({'access_token': access_token}), 200)  # Returning success response with access token
@@ -61,26 +66,35 @@ class SignUp(Resource):
         email = data['email']
         password = data['password']
 
-        user = User.query.filter_by(email=email).first()  # Querying user by email
+        # Check if the email is already registered
+        if User.query.filter_by(email=email).first():
+            return make_response(jsonify({'message': 'Email already registered'}), 400)
 
+        # Validate email format
         if not is_valid_email(email):
             return make_response(jsonify({'message': 'Invalid email address'}), 400)
-        
-        if user:
-            return make_response(jsonify({'message': 'User already exists'}), 400)  # Returning bad request if user already exists
-        
+
+        # Validate password format
         if not is_valid_password(password):
             return make_response(jsonify({'message': 'Invalid password'}), 400)
-            
 
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())  # Hashing password
+        # Hash the password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
-        new_user = User(name=name, email=email, password=hashed_password)  # Creating new user with hashed password
-        db.session.add(new_user)  # Adding user to the database session
-        db.session.commit()  # Committing user to the database
+        # Create a new user object
+        new_user = User(name=name, email=email, password=hashed_password)
 
-        return make_response(jsonify({'message': 'User created successfully'}), 201)  # Returning success response with created user message
-
+        # Add the user to the database session
+        db.session.add(new_user)
+        
+        try:
+            # Commit the user to the database
+            db.session.commit()
+            return make_response(jsonify({'message': 'User created successfully'}), 201)
+        except Exception as e:
+            # Rollback in case of any error
+            db.session.rollback()
+            return make_response(jsonify({'message': str(e)}), 500)  # Internal Server Error
 
 # Resource for user logout
 class Logout(Resource):
@@ -135,7 +149,7 @@ class UpdatePassword(Resource):
 #####################################Profile endpoints#########################################################
 
 class UserInfo(Resource):
-    @jwt_required()
+    # @jwt_required()
     def get(self, user_id):
         # Query user information
         user = User.query.get(user_id)
@@ -193,11 +207,11 @@ class EditUser(Resource):
             return {'message': 'No data provided'}, 400
 
 class DeleteUser(Resource):
-    @jwt_required()
+    # @jwt_required()
     def delete(self, user_id):
-        current_user_id = get_jwt_identity()
-        if current_user_id != str(user_id):
-            return {'message': 'Unauthorized access'}, 401
+        # current_user_id = get_jwt_identity()
+        # if current_user_id != str(user_id):
+        #     return {'message': 'Unauthorized access'}, 401
 
         # Query the user by user_id
         user = User.query.get(user_id)
@@ -215,6 +229,7 @@ class DeleteUser(Resource):
 
 
 #########################################################################################################################
+
 # Error handling for 404 - Not Found
 @app.errorhandler(404)
 def not_found(error):

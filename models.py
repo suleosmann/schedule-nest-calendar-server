@@ -6,48 +6,67 @@ db = SQLAlchemy()
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key = True)
-    name = db.Column(db.String(50), nullable = False)
-    email = db.Column(db.String(100), unique = True, nullable = False)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String, nullable=False)
     image = db.Column(db.LargeBinary) 
-    phone_number = db. Column(db.String(20))
+    phone_number = db.Column(db.String(20))
     profession = db.Column(db.String(100))
-    about = db.Column(db.Text)  
+    about = db.Column(db.Text)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'image': self.image,
+            'phone_number': self.phone_number,
+            'profession': self.profession,
+            'about': self.about
+        }
 
 class Event(db.Model, SerializerMixin):
     __tablename__ = 'events'
 
-    # Serialization rules with the attendees table
-    serialize_rules = ('-attendees.event',)
-    # Columns
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
     description = db.Column(db.String)
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
     location = db.Column(db.String)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Corrected foreign key constraint
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     recurrence = db.Column(db.Integer, default=0)
-    user = db.relationship('User', backref='events')
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'start_time': self.start_time,
+            'end_time': self.end_time,
+            'location': self.location,
+            'created_by': self.created_by,
+            'recurrence': self.recurrence
+        }
 
 class Attendee(db.Model, SerializerMixin):
     __tablename__ = 'attendees'
 
-    # Serialization rules with the events table
-    serialize_rules = ('event.attendees',) 
-
     id = db.Column(db.Integer, primary_key=True)
-    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)  # Reference to the event
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Reference to the user who is attending the event
-    status = db.Column(db.String(50))  # Example: status of the attendee, e.g., 'confirmed', 'pending', etc.
-    comment = db.Column(db.String(255))  # Example: a comment from the attendee regarding the event
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    status = db.Column(db.String(50))
+    comment = db.Column(db.String(255))
 
-    # Define relationships with Events and User Models
-    event = db.relationship('Event', backref='attendees')
-    user = db.relationship('User', backref='attendees')   
-    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'event_id': self.event_id,
+            'user_id': self.user_id,
+            'status': self.status,
+            'comment': self.comment
+        }
 
 class CalendarShare(db.Model, SerializerMixin):
     __tablename__ = 'calendarshares'
@@ -56,9 +75,9 @@ class CalendarShare(db.Model, SerializerMixin):
     calendar_owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     access_granted_to_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-    # Define relationships with the User model
-    calendar_owner = db.relationship('User', foreign_keys=[calendar_owner_id], backref='calendar_owner_shares')
-    access_granted_to = db.relationship('User', foreign_keys=[access_granted_to_id], backref='access_granted_to_shares')
-
-
-
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'calendar_owner_id': self.calendar_owner_id,
+            'access_granted_to_id': self.access_granted_to_id
+        }
