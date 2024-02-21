@@ -6,14 +6,9 @@ def is_valid_email(email):
     if not email:
         return False
     
-    # Use regular expression to validate email format
-    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    if not re.match(email_regex, email):
-        return False
-    
     # Use email-validator package to perform additional validation
     try:
-        email_validator.validate_email(email)
+        email_validator.validate_email(email, check_deliverability=False)
         return True
     except email_validator.EmailNotValidError:
         return False
@@ -45,14 +40,16 @@ def is_valid_password(password):
     
     return True
 
-
 def validate_phone_number(phone_number):
+    # Ensure phone_number is a string
+    phone_number = str(phone_number)
+
     # Check if phone number starts with the correct prefixes and has the correct length
-    if phone_number.startswith('+2541') or phone_number.startswith('+2547'):
+    if phone_number.startswith(('+2541', '+2547')) and len(phone_number) == 12:
         # Remove the "+" sign and spaces
         phone_number = phone_number.replace('+', '').replace(' ', '')
-        # Check if the remaining characters are digits and the total length is 12 (excluding the prefix)
-        if phone_number.isdigit() and len(phone_number) == 12:
+        # Check if the remaining characters are digits
+        if phone_number.isdigit():
             return True
     return False
 
