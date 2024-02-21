@@ -9,6 +9,7 @@ import bcrypt
 from validation import is_valid_email, is_valid_password, validate_phone_number
 from flask_bcrypt import check_password_hash, generate_password_hash
 from recurrence_helper import generate_recurrences
+from datetime import datetime
 
 
 
@@ -245,8 +246,6 @@ api.add_resource(UserInfo, '/user/<int:user_id>')
 api.add_resource(EditUser, '/edit_user/<int:user_id>')
 api.add_resource(DeleteUser, '/delete_user/<int:user_id>')
 api.add_resource(UpdatePassword, '/update_password')
-
-
 # Resource for creating an event
 class EventCreation(Resource):
     @jwt_required()  # Require authentication with JWT
@@ -262,17 +261,14 @@ class EventCreation(Resource):
         # Extracting event details from the request payload
         title = data.get('title')
         description = data.get('description')
-        start_time = data.get('start_time')
-        end_time = data.get('end_time')
+        start_time_str = data.get('start_time')
+        end_time_str = data.get('end_time')
         location = data.get('location')
         recurrence = data.get('recurrence')
-        
-        # Additional parameters for recurrence customization
-        frequency = data.get('frequency')
-        interval = data.get('interval')
-        byweekday = data.get('byweekday')
-        bymonthday = data.get('bymonthday')
-        count = data.get('count')
+
+        # Convert string representations to datetime objects
+        start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S")
+        end_time = datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M:%S")
 
         # Creating a new event
         new_event = Event(
@@ -282,11 +278,17 @@ class EventCreation(Resource):
             end_time=end_time,
             location=location,
             recurrence=recurrence,
-            created_by=user.id  # Assigning the user ID as the creator of the event
+            created_by=user.id
         )
 
         # If recurrence is specified, generate and store recurrences in the database
         if recurrence:
+            frequency = data.get('frequency')
+            interval = data.get('interval')
+            byweekday = data.get('byweekday')
+            bymonthday = data.get('bymonthday')
+            count = data.get('count')
+
             recurrences = generate_recurrences(
                 start_time=start_time,
                 recurrence=recurrence,
@@ -298,11 +300,14 @@ class EventCreation(Resource):
             )
 
             for recurrence_time in recurrences:
+                # Ensure end_time is a datetime object for each recurrence event
+                recurrence_end_time = datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M:%S")
+
                 recurrence_event = Event(
                     title=title,
                     description=description,
-                    start_time=recurrence_time,
-                    end_time=end_time,
+                    start_time=datetime.strptime(recurrence_time, "%Y-%m-%dT%H:%M:%S"),
+                    end_time=recurrence_end_time,
                     location=location,
                     recurrence=recurrence,
                     created_by=user.id
@@ -318,10 +323,11 @@ class EventCreation(Resource):
 # Adding the EventCreation resource to the API
 api.add_resource(EventCreation, '/create_event')
 
-# ...
+
+
 
 class EventManagement(Resource):
-    @jwt_required()  # Require authentication with JWT
+    @jwt_required()
     def put(self, event_id):
         current_user_email = get_jwt_identity()
         user = User.query.filter_by(email=current_user_email).first()
@@ -342,9 +348,11 @@ class EventManagement(Resource):
         if 'description' in data:
             event.description = data['description']
         if 'start_time' in data:
-            event.start_time = data['start_time']
+            event.start_time = datetime.strptime(data['start_time'], "%Y-%m-%dT%H:%M:%S")
         if 'end_time' in data:
-            event.end_time = data['end_time']
+            event.end_time = datetime.strptime(data['end_time'], "%Y-%m-%dT%H:%M:%S")
+
+
         if 'location' in data:
             event.location = data['location']
         if 'recurrence' in data:
@@ -354,7 +362,7 @@ class EventManagement(Resource):
 
         return make_response(jsonify({'message': 'Event updated successfully'}), 200)
 
-    @jwt_required()  # Require authentication with JWT
+    @jwt_required()
     def delete(self, event_id):
         current_user_email = get_jwt_identity()
         user = User.query.filter_by(email=current_user_email).first()
@@ -371,6 +379,7 @@ class EventManagement(Resource):
         db.session.commit()
 
         return make_response(jsonify({'message': 'Event deleted successfully'}), 200)
+
 
 # Adding the EventManagement resource to the API
 api.add_resource(EventManagement, '/manage_event/<int:event_id>')
