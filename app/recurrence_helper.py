@@ -3,14 +3,17 @@
 from datetime import datetime, timedelta
 from dateutil import rrule
 
-def generate_recurrences(start_time, recurrence):
+def generate_recurrences(start_time, recurrence, frequency, interval, byweekday, bymonthday, count):
     """
     Generate recurring events based on the start_time and recurrence pattern.
     """
     recurrences = []
 
-    # Parse start_time to datetime object
-    start_datetime = datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%S')
+    # Parse start_time to datetime object if it's not already a string
+    if isinstance(start_time, datetime):
+        start_datetime = start_time
+    else:
+        start_datetime = datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%S')
 
     # Example: handle daily recurrence for 5 occurrences
     if recurrence == 'daily':
@@ -44,4 +47,3 @@ def generate_recurrences(start_time, recurrence):
     # Add more recurrence patterns as needed
 
     return recurrences
- 
