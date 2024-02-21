@@ -33,8 +33,10 @@ parser = reqparse.RequestParser()
 parser.add_argument('name', type=str, required=False, help='name is required')
 parser.add_argument('email', type=str, required=True, help='Email is required')
 parser.add_argument('password', type=str, required=True, help='Password is required')
-
-
+parser.add_argument('image', type=str, required=False)
+parser.add_argument('phone_number', type=int, required=False)
+parser.add_argument('profession', type=str, required=False)
+parser.add_argument('about', type=str, required=False)
 
 # Resource for user login
 class Login(Resource):
