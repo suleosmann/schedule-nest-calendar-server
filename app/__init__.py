@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from app.models import db
-from app.routes import auth_routes, users_routes
+from app.routes import auth_routes, users_routes, events_routes
 
 def create_app(port=5000, debug=False):
     app = Flask(__name__)
@@ -31,6 +31,7 @@ def create_app(port=5000, debug=False):
     # Register authentication blueprint
     app.register_blueprint(auth_routes.bp, url_prefix='/auth')
     app.register_blueprint(users_routes.users_bp, url_prefix='/users')
+    app.register_blueprint(events_routes.events_bp, url_prefix='/events')
 
     # Run the Flask app with specified port and debug mode
     app.run(debug=debug, port=port)
