@@ -160,45 +160,37 @@ class UserInfo(Resource):
 
 
 class EditUser(Resource):
-    @jwt_required()
     def patch(self, user_id):
-        current_user_id = get_jwt_identity()  # Assuming user ID is stored in the JWT token as a string
-        if current_user_id != str(user_id):
-            return {'message': 'Unauthorized access'}, 401
+        user_to_edit = User.query.get_or_404(user_id)
 
-        # Query user information
-        user = User.query.get(user_id)
-        
-        if user is None:
-            return {'message': 'User not found'}, 404
-
-        # Update user attributes based on request data
-        data = request.json  # Assuming JSON data is sent in the request
+        data = request.json
         if data:
-            if 'name' in data:
-                user.name = data['name']
             if 'email' in data:
-                user.email = data['email']
+                # Check if the new email is already taken by another user
+                if User.query.filter_by(email=data['email']).first() and user_to_edit.email != data['email']:
+                    return {'message': 'This email is already in use.'}, 400
+                
+            if 'name' in data:
+                user_to_edit.name = data['name']
+            if 'email' in data:
+                user_to_edit.email = data['email']
             if 'image' in data:
-                user.image = data['image']
+                user_to_edit.image = data['image']
             if 'phone_number' in data:
+                # Assuming validate_phone_number is a function you have defined
                 if validate_phone_number(data['phone_number']):
-                    user.phone_number = data['phone_number']
+                    user_to_edit.phone_number = data['phone_number']
                 else:
                     return {'message': 'Invalid phone number format'}, 400
             if 'profession' in data:
-                user.profession = data['profession']
+                user_to_edit.profession = data['profession']
             if 'about' in data:
-                user.about = data['about']
-        
-            # Commit the changes to the database
-            db.session.commit()
+                user_to_edit.about = data['about']
 
-            # Return a success message
+            db.session.commit()
             return {'message': 'User updated successfully'}, 200
         else:
             return {'message': 'No data provided'}, 400
-
 
 class DeleteUser(Resource):
     @jwt_required()
