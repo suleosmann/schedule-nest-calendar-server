@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
+from datetime import datetime
 
 db = SQLAlchemy()
 
@@ -43,8 +44,8 @@ class Event(db.Model, SerializerMixin):
             'id': self.id,
             'title': self.title,
             'description': self.description,
-            'start_time': self.start_time,
-            'end_time': self.end_time,
+            'start_time': self.start_time.isoformat(),  # Convert datetime to ISO format string
+            'end_time': self.end_time.isoformat(),      # Convert datetime to ISO format string
             'location': self.location,
             'created_by': self.created_by,
             'recurrence': self.recurrence

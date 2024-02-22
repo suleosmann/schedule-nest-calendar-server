@@ -161,4 +161,29 @@ class EventManagement(Resource):
 # Adding the EventManagement resource to the API
 api.add_resource(EventManagement, '/manage_event/<int:event_id>')
 
+# Endpoint to fetch all calendar events
+class Events(Resource):
+    @jwt_required()
+    def get(self):
+        events  = []
+        for event in Event.query.all():
+            event_dict = event.to_dict()
+            events.append(event_dict)
+
+        response = make_response(
+            jsonify(events),
+            200
+        ) 
+
+        return response 
+
+# Adding Event Fetching Resource to the API
+api.add_resource(Events, '/get_events')
+
+
+
+
+
+
+
 
