@@ -86,10 +86,26 @@ class EventCreation(Resource):
         db.session.add(new_event)
         db.session.commit()
 
-        return make_response(jsonify({'message': 'Event created successfully'}), 201)
+        # Include event details in the response
+        response_data = {
+            'message': 'Event created successfully',
+            'event': {
+                'id': new_event.id,
+                'title': new_event.title,
+                'description': new_event.description,
+                'start_time': new_event.start_time.strftime("%Y-%m-%dT%H:%M:%S"),
+                'end_time': new_event.end_time.strftime("%Y-%m-%dT%H:%M:%S"),
+                'location': new_event.location,
+                'recurrence': new_event.recurrence,
+                'created_by': new_event.created_by
+            }
+        }
+
+        return make_response(jsonify(response_data), 201)
 
 # Adding the EventCreation resource to the API
 api.add_resource(EventCreation, '/create_event')
+
 
 
 class EventManagement(Resource):
