@@ -178,7 +178,9 @@ class Events(Resource):
         return response 
 
 # Adding Event Fetching Resource to the API
-api.add_resource(Events, '/get_events') 
+api.add_resource(Events, '/get_events')
+
+
 
 
 
