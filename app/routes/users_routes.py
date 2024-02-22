@@ -97,15 +97,22 @@ class GetAllUsers(Resource):
         # Query all users
         users = User.query.all()
         
-        # Serialize user data including user ID, name, and email
-        serialized_users = [{"id": user.id, "name": user.name, "email": user.email} for user in users]
+        # Serialize user data including user ID, name, and email for each user
+        serialized_users = []
+        for user in users:
+            serialized_user = {
+                'id': user.id,
+                'name': user.name,
+                'email': user.email
+            }
+            serialized_users.append(serialized_user)
         
         # Check if users are found
         if len(serialized_users) < 1:
             return {'message': 'No users found'}, 404
         
         # Return the serialized users
-        return jsonify(serialized_users), 200
+        return serialized_users, 200
 
 
 
