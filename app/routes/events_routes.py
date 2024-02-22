@@ -160,3 +160,5 @@ class EventManagement(Resource):
 
 # Adding the EventManagement resource to the API
 api.add_resource(EventManagement, '/manage_event/<int:event_id>')
+
+
