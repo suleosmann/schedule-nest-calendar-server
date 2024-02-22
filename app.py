@@ -1,3 +1,4 @@
+from asyncio import events
 from flask import Flask, request, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -323,6 +324,65 @@ class EventCreation(Resource):
 # Adding the EventCreation resource to the API
 api.add_resource(EventCreation, '/create_event')
 
+class EventGuests(Resource):
+    @jwt_required()  # Require authentication with JWT
+    def post(self, event_id):
+        current_user_email = get_jwt_identity()
+        user = User.query.filter_by(email=current_user_email).first()
+
+        if not user:
+            return make_response(jsonify({'message': 'User not found'}), 404)
+
+        event = Event.query.filter_by(id=event_id, created_by=user.id).first()
+
+        if not event:
+            return make_response(jsonify({'message': 'Event not found or unauthorized'}), 404)
+
+        data = request.get_json()
+        guest_email = data.get('guest_email')
+
+        # Check if the guest email corresponds to a valid user
+        guest_user = User.query.filter_by(email=guest_email).first()
+
+        if not guest_user:
+            return make_response(jsonify({'message': 'Guest not found'}), 404)
+
+        # Check if the guest is already added to the event
+        existing_attendee = Attendee.query.filter_by(event_id=event.id, user_id=guest_user.id).first()
+
+        if existing_attendee:
+            return make_response(jsonify({'message': 'Guest is already added to the event'}), 400)
+
+        # Add the guest as an attendee to the event
+        new_attendee = Attendee(event_id=event.id, user_id=guest_user.id)
+        db.session.add(new_attendee)
+        db.session.commit()
+
+        return make_response(jsonify({'message': 'Guest added to the event successfully'}), 201)
+
+    @jwt_required()  # Require authentication with JWT
+    def get(self, event_id):
+        current_user_email = get_jwt_identity()
+        user = User.query.filter_by(email=current_user_email).first()
+
+        if not user:
+            return make_response(jsonify({'message': 'User not found'}), 404)
+
+        event = Event.query.filter_by(id=event_id, created_by=user.id).first()
+
+        if not event:
+            return make_response(jsonify({'message': 'Event not found or unauthorized'}), 404)
+
+        # Get all attendees for the event
+        attendees = Attendee.query.filter_by(event_id=event.id).all()
+        attendee_emails = [User.query.get(attendee.user_id).email for attendee in attendees]
+
+        return make_response(jsonify({'attendees': attendee_emails}), 200)
+
+
+# Adding the EventCreation and EventGuests resources to the API
+
+api.add_resource(EventGuests, '/event_guests/<int:event_id>')
 
 
 
