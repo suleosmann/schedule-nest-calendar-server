@@ -15,6 +15,7 @@ flask-migrate = "*"
 email-validator = "*"
 faker = "*"
 flask-bcrypt = "*"
+flask-mail = "*"
 
 [dev-packages]
 

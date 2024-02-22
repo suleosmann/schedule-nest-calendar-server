@@ -319,10 +319,26 @@ class EventCreation(Resource):
         db.session.add(new_event)
         db.session.commit()
 
-        return make_response(jsonify({'message': 'Event created successfully'}), 201)
+        # Include event details in the response
+        response_data = {
+            'message': 'Event created successfully',
+            'event': {
+                'id': new_event.id,
+                'title': new_event.title,
+                'description': new_event.description,
+                'start_time': new_event.start_time.strftime("%Y-%m-%dT%H:%M:%S"),
+                'end_time': new_event.end_time.strftime("%Y-%m-%dT%H:%M:%S"),
+                'location': new_event.location,
+                'recurrence': new_event.recurrence,
+                'created_by': new_event.created_by
+            }
+        }
+
+        return make_response(jsonify(response_data), 201)
 
 # Adding the EventCreation resource to the API
 api.add_resource(EventCreation, '/create_event')
+
 
 class EventGuests(Resource):
     @jwt_required()  # Require authentication with JWT
@@ -339,26 +355,31 @@ class EventGuests(Resource):
             return make_response(jsonify({'message': 'Event not found or unauthorized'}), 404)
 
         data = request.get_json()
-        guest_email = data.get('guest_email')
+        guest_emails = data.get('guest_emails')
 
-        # Check if the guest email corresponds to a valid user
-        guest_user = User.query.filter_by(email=guest_email).first()
+        if not guest_emails or not isinstance(guest_emails, list):
+            return make_response(jsonify({'message': 'Invalid guest_emails format'}), 400)
 
-        if not guest_user:
-            return make_response(jsonify({'message': 'Guest not found'}), 404)
+        for guest_email in guest_emails:
+            # Check if the guest email corresponds to a valid user
+            guest_user = User.query.filter_by(email=guest_email).first()
 
-        # Check if the guest is already added to the event
-        existing_attendee = Attendee.query.filter_by(event_id=event.id, user_id=guest_user.id).first()
+            if not guest_user:
+                return make_response(jsonify({'message': f'Guest "{guest_email}" not found'}), 404)
 
-        if existing_attendee:
-            return make_response(jsonify({'message': 'Guest is already added to the event'}), 400)
+            # Check if the guest is already added to the event
+            existing_attendee = Attendee.query.filter_by(event_id=event.id, user_id=guest_user.id).first()
 
-        # Add the guest as an attendee to the event
-        new_attendee = Attendee(event_id=event.id, user_id=guest_user.id)
-        db.session.add(new_attendee)
+            if existing_attendee:
+                return make_response(jsonify({'message': f'Guest "{guest_email}" is already added to the event'}), 400)
+
+            # Add the guest as an attendee to the event
+            new_attendee = Attendee(event_id=event.id, user_id=guest_user.id)
+            db.session.add(new_attendee)
+
         db.session.commit()
 
-        return make_response(jsonify({'message': 'Guest added to the event successfully'}), 201)
+        return make_response(jsonify({'message': 'Guests added to the event successfully'}), 201)
 
     @jwt_required()  # Require authentication with JWT
     def get(self, event_id):
@@ -379,11 +400,8 @@ class EventGuests(Resource):
 
         return make_response(jsonify({'attendees': attendee_emails}), 200)
 
-
-# Adding the EventCreation and EventGuests resources to the API
-
+# Adding the modified EventGuests resource to the API
 api.add_resource(EventGuests, '/event_guests/<int:event_id>')
-
 
 
 class EventManagement(Resource):
