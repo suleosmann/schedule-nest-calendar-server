@@ -92,14 +92,22 @@ class DeleteUser(Resource):
     
 
 class GetAllUsers(Resource):
-    @jwt_required
-    def get_all_users(self):
-        # queries all users
+    @jwt_required()
+    def get(self):
+        # Query all users
         users = User.query.all()
-        user = [{"name": user.name, "email": user.email} for user in users]
-        if len(user)<1:
-            return {'message':'No user found'},404
-        return  jsonify(user,200)
+        
+        # Serialize user data including user ID, name, and email
+        serialized_users = [{"id": user.id, "name": user.name, "email": user.email} for user in users]
+        
+        # Check if users are found
+        if len(serialized_users) < 1:
+            return {'message': 'No users found'}, 404
+        
+        # Return the serialized users
+        return jsonify(serialized_users), 200
+
+
 
 # Add resources to the Api
 api.add_resource(GetAllUsers, '/get_all_users')
