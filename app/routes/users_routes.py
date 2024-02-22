@@ -89,8 +89,20 @@ class DeleteUser(Resource):
         
         # Return a success message
         return {'message': 'User deleted successfully'}, 200
+    
+
+class GetAllUsers(Resource):
+    @jwt_required
+    def get_all_users(self):
+        # queries all users
+        users = User.query.all()
+        user = [{"name": user.name, "email": user.email} for user in users]
+        if len(user)<1:
+            return {'message':'No user found'},404
+        return  jsonify(user,200)
 
 # Add resources to the Api
+api.add_resource(GetAllUsers, '/get_all_users')
 api.add_resource(UserInfo, '/user_info/<int:user_id>')
 api.add_resource(EditUser, '/edit_user/<int:user_id>')
 api.add_resource(DeleteUser, '/delete_user/<int:user_id>')
