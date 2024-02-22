@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from app.models import db
-from app.routes import auth_routes, users_routes, events_routes
+from app.routes import auth_routes, users_routes, events_routes, calendarshare_routes, attendees_routes
 
 def create_app(port=5000, debug=False):
     app = Flask(__name__)
@@ -32,8 +32,10 @@ def create_app(port=5000, debug=False):
     app.register_blueprint(auth_routes.bp, url_prefix='/auth')
     app.register_blueprint(users_routes.users_bp, url_prefix='/users')
     app.register_blueprint(events_routes.events_bp, url_prefix='/events')
+    app.register_blueprint(calendarshare_routes.calendarshare_bp, url_prefix='/calendar')
+    app.register_blueprint(attendees_routes.attendees_bp, url_prefix='/attendees')
 
     # Run the Flask app with specified port and debug mode
     app.run(debug=debug, port=port)
 
-    return app
+    return app 
