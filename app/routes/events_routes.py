@@ -103,8 +103,7 @@ class EventCreation(Resource):
 
         return make_response(jsonify(response_data), 201)
 
-# Adding the EventCreation resource to the API
-api.add_resource(EventCreation, '/create_event')
+#
 
 # Adding the EventCreation resource to the API
 api.add_resource(EventCreation, '/create_event')
