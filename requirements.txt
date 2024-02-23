@@ -1,0 +1,11 @@
+flask-migrate
+flask
+flask-sqlalchemy
+sqlalchemy-serializer
+flask-cors
+flask-restful
+flask-jwt-extended
+email-validator
+bcrypt
+python-dateutil
+faker
