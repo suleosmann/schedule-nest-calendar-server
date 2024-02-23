@@ -42,8 +42,9 @@ class SignUp(Resource):
             return make_response(jsonify({'message': 'Invalid email address'}), 400)
 
         # Validate password format
-        if not is_valid_password(password):
-            return make_response(jsonify({'message': 'Invalid password'}), 400)
+        if not is_valid_password(password, email):
+            # Password is invalid
+            return {'message': 'Passwords Cannot be an email'}, 400
 
         # Hash the password
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
@@ -125,9 +126,9 @@ class UpdatePassword(Resource):
             return {'message': 'Invalid email format'}, 400
         
         # Validate password format
-        if not is_valid_password(new_password):
-            return {'message': 'Invalid password format'}, 400
-        
+        if not is_valid_password(new_password, email):
+            # Password is invalid
+            return {'message': 'Passwords Cannot be an email'}, 400
         # Check if passwords match
         if new_password != confirm_new_password:
             return {'message': 'Passwords do not match'}, 400

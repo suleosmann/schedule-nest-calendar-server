@@ -13,7 +13,7 @@ def is_valid_email(email):
     except email_validator.EmailNotValidError:
         return False
 
-def is_valid_password(password):
+def is_valid_password(password, email):
     # Check if password is empty
     if not password:
         return False
@@ -38,7 +38,12 @@ def is_valid_password(password):
     if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
         return False
     
+    # Check if the password is the same as the email
+    if password == email:
+        return False
+    
     return True
+
 
 def validate_phone_number(phone_number):
     # Ensure phone_number is a string
