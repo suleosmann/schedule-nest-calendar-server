@@ -137,13 +137,17 @@ class UpdatePassword(Resource):
         if not user:
             return {'message': 'User not found'}, 404
         
-        # Update user's password
-        user.password = generate_password_hash(new_password)
+        # Hash the new password
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+        
+        # Update user's password with the hashed password
+        user.password = hashed_password
         
         # Commit changes to the database
         db.session.commit()
         
         return {'message': 'Password updated successfully'}, 200
-
+    
 # Add the resource to the Api
 api.add_resource(UpdatePassword, '/update_password')
+
