@@ -3,8 +3,6 @@ from flask_restful import Api, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..models import User, Attendee, Event
 from ..validation import is_valid_email, validate_phone_number
-from flask import make_response
-
 
 from .. import db
 
@@ -119,20 +117,25 @@ class GetAllUsers(Resource):
 # Endpoints to get all calendar events of a user(events they created plus events they are invited to) using their user_id
 class UserCalendarEvents(Resource):  
     def get(self, user_id):      
+        # Query events created by the user
         user_created_events = Event.query.filter_by(created_by=user_id).all()
-
+        
+        # Query events where the user is attending by fetching event IDs from Attendee table
         events_attending = db.session.query(Attendee.event_id).filter_by(user_id=user_id).all()
+        
+        # Extract event IDs from the result
         event_ids_attending = [event_id[0] for event_id in events_attending]
-
+        
+        # Query events where the user is attending
         user_attending_events = Event.query.filter(Event.id.in_(event_ids_attending)).all()
-
+        
+        # Combine the lists of events created by the user and events where the user is attending
         all_user_events = user_created_events + user_attending_events
+        
+        # Serialize event data if needed
         serialized_events = [event.to_dict() for event in all_user_events]
-
-        if not serialized_events:
-            return make_response(jsonify({'message': 'No events found for the user'}), 404)
-
-        return make_response(jsonify({'user_events': serialized_events}), 200)
+        
+        return serialized_events
 
 
         
