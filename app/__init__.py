@@ -26,7 +26,7 @@ def create_app(port=5000, debug=False):
     jwt = JWTManager(app)
 
     # Enable CORS
-    CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+    CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
     # Register authentication blueprint
     app.register_blueprint(auth_routes.bp, url_prefix='/auth')
