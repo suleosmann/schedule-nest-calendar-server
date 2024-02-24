@@ -92,13 +92,17 @@ class GetAllUsers(Resource):
         return serialized_users, 200
 
 class UserCalendarEvents(Resource):  
-    def get(self, user_id):      
-        user_created_events = Event.query.filter_by(created_by=user_id).all()
-        events_attending = db.session.query(Attendee.event_id).filter_by(user_id=user_id).all()
+    @jwt_required()
+    def get(self):      
+        current_user_id = get_jwt_identity()
+        
+        user_created_events = Event.query.filter_by(created_by=current_user_id).all()
+        events_attending = db.session.query(Attendee.event_id).filter_by(user_id=current_user_id).all()
         event_ids_attending = [event_id[0] for event_id in events_attending]
         user_attending_events = Event.query.filter(Event.id.in_(event_ids_attending)).all()
         all_user_events = user_created_events + user_attending_events
         serialized_events = [event.to_dict() for event in all_user_events]
+        
         return serialized_events
 
 class RefreshToken(Resource):
@@ -113,5 +117,5 @@ api.add_resource(GetAllUsers, '/get_all_users')
 api.add_resource(UserInfo, '/user_info/<int:user_id>')
 api.add_resource(EditUser, '/edit_user/<int:user_id>')
 api.add_resource(DeleteUser, '/delete_user/<int:user_id>')
-api.add_resource(UserCalendarEvents, '/user/<int:user_id>/calendar-events')
+api.add_resource(UserCalendarEvents, '/calendar-events')
 api.add_resource(RefreshToken, '/refresh')
