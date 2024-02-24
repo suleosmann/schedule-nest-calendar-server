@@ -28,6 +28,8 @@ def create_app(port=5000, debug=False):
 
     # Enable CORS and allow credentials
     CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
+    
+
 
     # Register authentication blueprint
     app.register_blueprint(auth_routes.bp, url_prefix='/auth')
@@ -38,5 +40,6 @@ def create_app(port=5000, debug=False):
 
     # Run the Flask app with specified port and debug mode
     app.run(debug=debug, port=port)
+    return app 
 
     return app
