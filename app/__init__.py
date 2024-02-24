@@ -8,6 +8,7 @@ from flask_jwt_extended import JWTManager
 from app.models import db
 from app.routes import auth_routes, users_routes, events_routes, calendarshare_routes, attendees_routes
 
+# Inside your create_app function or wherever you initialize your Flask app
 def create_app(port=5000, debug=False):
     app = Flask(__name__)
 
@@ -25,8 +26,8 @@ def create_app(port=5000, debug=False):
     # Initialize JWT
     jwt = JWTManager(app)
 
-    # Enable CORS
-    CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
+    # Enable CORS and allow credentials
+    CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
 
     # Register authentication blueprint
     app.register_blueprint(auth_routes.bp, url_prefix='/auth')
@@ -38,4 +39,4 @@ def create_app(port=5000, debug=False):
     # Run the Flask app with specified port and debug mode
     app.run(debug=debug, port=port)
 
-    return app 
+    return app
