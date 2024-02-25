@@ -9,10 +9,13 @@ users_bp = Blueprint('users', __name__)
 api = Api(users_bp)
 
 class UserInfo(Resource):
-    def get(self, user_id):
-        user = User.query.get(user_id)
-        if user is None:
+    @jwt_required()
+    def get(self):
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        if not user:
             return {'message': 'User not found'}, 404
+
 
         serialized_user = user.to_dict()
         response = {
@@ -27,44 +30,36 @@ class UserInfo(Resource):
 
 class EditUser(Resource):
     @jwt_required()
-    def patch(self, user_id):
+    def patch(self):
         current_user_id = get_jwt_identity()
-        if current_user_id != user_id:
-            return {'message': 'Unauthorized access'}, 401
-
-        user_to_edit = User.query.get_or_404(user_id)
+        user_to_edit = User.query.get_or_404(current_user_id)
         data = request.json
-        if data:
-            if 'phone_number' in data:
-                if validate_phone_number(data['phone_number']):
-                    user_to_edit.phone_number = data['phone_number']
-                else:
-                    return {'message': 'Invalid phone number format'}, 400
 
-            if 'name' in data:
-                user_to_edit.name = data['name']
-            if 'email' in data:
-                user_to_edit.email = data['email']
-            if 'image' in data:
-                user_to_edit.image = data['image']
-            if 'profession' in data:
-                user_to_edit.profession = data['profession']
-            if 'about' in data:
-                user_to_edit.about = data['about']
-
-            db.session.commit()
-            return {'message': 'User updated successfully'}, 200
-        else:
+        if not data:
             return {'message': 'No data provided'}, 400
+
+        if 'phone_number' in data and validate_phone_number(data['phone_number']):
+            user_to_edit.phone_number = data['phone_number']
+        if 'name' in data:
+            user_to_edit.name = data['name']
+        if 'email' in data:
+            user_to_edit.email = data['email']
+        if 'image' in data:
+            user_to_edit.image = data['image']
+        if 'profession' in data:
+            user_to_edit.profession = data['profession']
+        if 'about' in data:
+            user_to_edit.about = data['about']
+
+        db.session.commit()
+        return {'message': 'User updated successfully'}, 200 if data else 400
 
 class DeleteUser(Resource):
     @jwt_required()
-    def delete(self, user_id):
+    def delete(self):
         current_user_id = get_jwt_identity()
-        if current_user_id != user_id:
-            return {'message': 'Unauthorized access'}, 401
+        user = User.query.get(current_user_id)
 
-        user = User.query.get(user_id)
         if user is None:
             return {'message': 'User not found'}, 404
         
@@ -72,6 +67,7 @@ class DeleteUser(Resource):
         db.session.commit()
         
         return {'message': 'User deleted successfully'}, 200
+
 
 class GetAllUsers(Resource):
     @jwt_required()
@@ -114,8 +110,8 @@ class RefreshToken(Resource):
 
 # Add resources to the Api
 api.add_resource(GetAllUsers, '/get_all_users')
-api.add_resource(UserInfo, '/user_info/<int:user_id>')
-api.add_resource(EditUser, '/edit_user/<int:user_id>')
-api.add_resource(DeleteUser, '/delete_user/<int:user_id>')
+api.add_resource(UserInfo, '/user_info')
+api.add_resource(EditUser, '/edit_user')
+api.add_resource(DeleteUser, '/delete_user')
 api.add_resource(UserCalendarEvents, '/calendar-events')
 api.add_resource(RefreshToken, '/refresh')
