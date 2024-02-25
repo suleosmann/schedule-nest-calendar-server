@@ -67,15 +67,12 @@ class EventCreation(Resource):
                 count=count
             )
 
-            for recurrence_time in recurrences:
-                # Ensure end_time is a datetime object for each recurrence event
-                recurrence_end_time = datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M:%S")
-
+            for recurrence_time, recurrence_end_time in recurrences:
                 recurrence_event = Event(
                     title=title,
                     description=description,
                     start_time=datetime.strptime(recurrence_time, "%Y-%m-%dT%H:%M:%S"),
-                    end_time=recurrence_end_time,
+                    end_time=datetime.strptime(recurrence_end_time, "%Y-%m-%dT%H:%M:%S"),
                     location=location,
                     recurrence=recurrence,
                     created_by=user.id

@@ -1,5 +1,3 @@
-# recurrence_helper.py
-
 from datetime import datetime, timedelta
 from dateutil import rrule
 
@@ -15,12 +13,16 @@ def generate_recurrences(start_time, recurrence, frequency, interval, byweekday,
     else:
         start_datetime = datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%S')
 
+    # Adjust the end time based on the start time
+    end_time = start_datetime + timedelta(hours=1)  # Adjust this as needed
+
     # Example: handle daily recurrence for 5 occurrences
     if recurrence == 'daily':
         recurrence_rule = rrule.rrule(
             rrule.DAILY,
             dtstart=start_datetime,
-            count=5  # Adjust the number of recurrences as needed
+            count=count,
+            interval=interval
         )
         recurrences = [dt.strftime('%Y-%m-%dT%H:%M:%S') for dt in recurrence_rule]
 
@@ -28,9 +30,10 @@ def generate_recurrences(start_time, recurrence, frequency, interval, byweekday,
     elif recurrence == 'weekly':
         recurrence_rule = rrule.rrule(
             rrule.WEEKLY,
-            byweekday=[rrule.MO, rrule.WE],
+            byweekday=byweekday,
             dtstart=start_datetime,
-            count=5
+            count=count,
+            interval=interval
         )
         recurrences = [dt.strftime('%Y-%m-%dT%H:%M:%S') for dt in recurrence_rule]
 
@@ -38,12 +41,18 @@ def generate_recurrences(start_time, recurrence, frequency, interval, byweekday,
     elif recurrence == 'monthly':
         recurrence_rule = rrule.rrule(
             rrule.MONTHLY,
-            bymonthday=[15],
+            bymonthday=bymonthday,
             dtstart=start_datetime,
-            count=5
+            count=count,
+            interval=interval
         )
         recurrences = [dt.strftime('%Y-%m-%dT%H:%M:%S') for dt in recurrence_rule]
 
-    # Add more recurrence patterns as needed
+    # Adjust the end time for each recurrence
+    recurrences_with_end_time = []
+    for recurrence_time in recurrences:
+        recurrence_end_time = datetime.strptime(recurrence_time, "%Y-%m-%dT%H:%M:%S") + (end_time - start_datetime)
+        recurrences_with_end_time.append((recurrence_time, recurrence_end_time.strftime('%Y-%m-%dT%H:%M:%S')))
 
-    return recurrences
+    return recurrences_with_end_time
+
