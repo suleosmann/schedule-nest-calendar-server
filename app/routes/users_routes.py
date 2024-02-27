@@ -89,7 +89,7 @@ class DeleteUser(Resource):
 
 
 class GetAllUsers(Resource):
-    @jwt_required()
+    
     def get(self):
         users = User.query.all()
         serialized_users = []
