@@ -13,7 +13,8 @@ flask-restful = "*"
 flask-jwt-extended = "*"
 email-validator = "*"
 bcrypt = "*"
-python-dateutil = "==2.8.2"
+python-dateutil = "*"
+
 faker = "*"
 
 [dev-packages]

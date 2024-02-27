@@ -6,6 +6,7 @@ from flask_jwt_extended import JWTManager
 from datetime import timedelta  # Import timedelta for setting token expiry
 from app.models import db
 from app.routes import auth_routes, users_routes, events_routes, calendarshare_routes, attendees_routes
+#from dateutil.rrule import InvalidRRuleError
 
 # Inside your create_app function or wherever you initialize your Flask app
 def create_app(port=5000, debug=False):

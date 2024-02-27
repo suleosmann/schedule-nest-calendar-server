@@ -5,7 +5,18 @@ from ..models import User, Event
 from datetime import datetime
 from ..recurrence_helper import generate_recurrences
 from .. import db
+from dateutil.rrule import rrule, rruleset, MO, TU, WE, TH, FR, SA, SU
 
+
+# Utility function to convert weekday string to integer
+def convert_to_weekday_integer(day_str):
+    # Map weekday string to integer
+    weekdays_mapping = {'mo': 0, 'tu': 1, 'we': 2, 'th': 3, 'fr': 4, 'sa': 5, 'su': 6}
+    return weekdays_mapping.get(day_str.lower(), 0)  # Default to 0 if not found
+
+# Utility function for formatting datetime objects
+def format_datetime(dt):
+    return dt.strftime("%Y-%m-%dT%H:%M:%S")
 
 events_bp = Blueprint('events', __name__)
 api = Api(events_bp)
@@ -37,6 +48,10 @@ class EventCreation(Resource):
         # Convert string representations to datetime objects
         start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S")
         end_time = datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M:%S")
+
+        # Example conversion from string to integer for byweekday values
+        byweekday = [convert_to_weekday_integer(day_str) for day_str in data.get('byweekday', [])]
+        import pdb; pdb.set_trace()
 
         # Creating a new event
         new_event = Event(
@@ -90,8 +105,8 @@ class EventCreation(Resource):
                 'id': new_event.id,
                 'title': new_event.title,
                 'description': new_event.description,
-                'start_time': new_event.start_time.strftime("%Y-%m-%dT%H:%M:%S"),
-                'end_time': new_event.end_time.strftime("%Y-%m-%dT%H:%M:%S"),
+                'start_time': format_datetime(new_event.start_time),
+                'end_time': format_datetime(new_event.end_time),
                 'location': new_event.location,
                 'recurrence': new_event.recurrence,
                 'created_by': new_event.created_by
@@ -100,7 +115,6 @@ class EventCreation(Resource):
 
         return make_response(jsonify(response_data), 201)
 
-#
 
 # Adding the EventCreation resource to the API
 api.add_resource(EventCreation, '/create_event')
@@ -179,7 +193,7 @@ api.add_resource(EventManagement, '/manage_event/<int:event_id>')
 class Events(Resource):
     @jwt_required()
     def get(self):
-        events  = []
+        events = []
         for event in Event.query.all():
             event_dict = event.to_dict()
             events.append(event_dict)
@@ -187,17 +201,9 @@ class Events(Resource):
         response = make_response(
             jsonify(events),
             200
-        ) 
+        )
 
-        return response 
+        return response
 
 # Adding Event Fetching Resource to the API
 api.add_resource(Events, '/get_events')
-
-
-
-
-
-
-
-
