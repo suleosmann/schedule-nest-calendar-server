@@ -9,10 +9,27 @@ from .. import db
 users_bp = Blueprint('users', __name__)
 api = Api(users_bp)
 
-
+def jwt_or_refresh_token_required(fn):
+    """
+    Custom decorator to accept either JWT access token or refresh token.
+    """
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            # Try to verify JWT token in request headers
+            verify_jwt_in_request()
+            return fn(*args, **kwargs)
+        except:
+            try:
+                # Try to get JWT identity
+                get_jwt_identity()
+                return fn(*args, **kwargs)
+            except:
+                return {'message': 'Missing or invalid token'}, 401
+    return wrapper
 
 class UserInfo(Resource):
-    @jwt_required
+    @jwt_or_refresh_token_required
     def get(self):
         current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
