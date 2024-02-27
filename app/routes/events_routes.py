@@ -51,7 +51,7 @@ class EventCreation(Resource):
 
         # Example conversion from string to integer for byweekday values
         byweekday = [convert_to_weekday_integer(day_str) for day_str in data.get('byweekday', [])]
-        import pdb; pdb.set_trace()
+       
 
         # Creating a new event
         new_event = Event(

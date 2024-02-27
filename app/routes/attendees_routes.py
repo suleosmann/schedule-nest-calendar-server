@@ -16,17 +16,17 @@ class EventGuests(Resource):
             return make_response(jsonify({'message': 'Event not found or unauthorized'}), 404)
 
         data = request.get_json()
-        guest_emails = data.get('guest_emails')
+        guest_id = data.get('guest_id')
 
-        if not isinstance(guest_emails, list):
+        if not isinstance(guest_id, list):
             return make_response(jsonify({'message': 'Invalid input format. Expected list of guest emails.'}), 400)
 
-        for guest_email in guest_emails:
+        for guest_id in guest_id:
             # Check if the guest email corresponds to a valid user
-            guest_user = User.query.filter_by(email=guest_email).first()
+            guest_user = User.query.filter_by(id=guest_id).first()
 
             if not guest_user:
-                return make_response(jsonify({'message': f'User with email {guest_email} not found'}), 404)
+                return make_response(jsonify({'message': f'User with id {guest_id} not found'}), 404)
 
             # Check if the guest is already added to the event
             existing_attendee = Attendee.query.filter_by(event_id=event.id, user_id=guest_user.id).first()
@@ -42,7 +42,7 @@ class EventGuests(Resource):
         # Commit all changes to the database
         db.session.commit()
 
-        if len(guest_emails) == 1 and existing_attendee:
+        if len(guest_id) == 1 and existing_attendee:
             return make_response(jsonify({'message': 'Guest is already added to the event'}), 400)
         else:
             return make_response(jsonify({'message': 'Guests added to the event successfully'}), 201)
