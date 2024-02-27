@@ -1,21 +1,23 @@
 from flask import Blueprint, request, jsonify
 from flask_restful import Api, Resource
-from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, create_refresh_token
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, create_refresh_token, verify_jwt_in_request
 from ..models import User, Attendee, Event
 from ..validation import is_valid_email, validate_phone_number
+from functools import wraps
 from .. import db
 
 users_bp = Blueprint('users', __name__)
 api = Api(users_bp)
 
+
+
 class UserInfo(Resource):
-    @jwt_required()
+    @jwt_required
     def get(self):
         current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
         if not user:
             return {'message': 'User not found'}, 404
-
 
         serialized_user = user.to_dict()
         response = {

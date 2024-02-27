@@ -8,6 +8,7 @@ from ..validation import is_valid_email, is_valid_password
 from .. import db  # Import the db instance
 import bcrypt
 
+
 # Create a Blueprint for authentication routes
 bp = Blueprint('auth', __name__)
 
@@ -93,7 +94,7 @@ api.add_resource(Login, '/login')
 class Logout(Resource):
     @jwt_required() # Requiring access token for this resource
     def post(self):
-        email = get_jwt_identity() # Getting user email from access token
+        user_id = get_jwt_identity() # Getting user email from access token
         # Perform any additional logout actions here if needed
         return make_response(jsonify({'message': 'Logged out successfully'}), 200) # Returning success response with logged out message
 
