@@ -117,7 +117,7 @@ class UpdatePassword(Resource):
         # Extract data from request
         email = data['email']
         new_password = data['new_password']
-        confirm_new_password = data['confirm_new_password']
+        confirm_new_password = data['confirm_new_password'] # Updated key name
         
         # Validate request data
         if not email or not new_password or not confirm_new_password:
@@ -150,6 +150,8 @@ class UpdatePassword(Resource):
         db.session.commit()
         
         return {'message': 'Password updated successfully'}, 200
+
+
     
 # Add the resource to the Api
 api.add_resource(UpdatePassword, '/update_password')

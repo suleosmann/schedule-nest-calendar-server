@@ -89,7 +89,6 @@ class DeleteUser(Resource):
 
 
 class GetAllUsers(Resource):
-    
     def get(self):
         users = User.query.all()
         serialized_users = []
@@ -120,12 +119,10 @@ class UserCalendarEvents(Resource):
         
         return serialized_events
 
-class RefreshToken(Resource):
-    @jwt_required()  # Specify refresh=True to require a valid refresh token
-    def post(self):
-        current_user = get_jwt_identity()
-        new_refresh_token = create_refresh_token(identity=current_user)
-        return {'refresh_token': new_refresh_token}, 200
+
+    
+    
+
 
 # Add resources to the Api
 api.add_resource(GetAllUsers, '/get_all_users')
@@ -133,4 +130,4 @@ api.add_resource(UserInfo, '/user_info')
 api.add_resource(EditUser, '/edit_user')
 api.add_resource(DeleteUser, '/delete_user')
 api.add_resource(UserCalendarEvents, '/calendar-events')
-api.add_resource(RefreshToken, '/refresh')
+
