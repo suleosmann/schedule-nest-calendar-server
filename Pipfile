@@ -14,8 +14,9 @@ flask-jwt-extended = "*"
 email-validator = "*"
 bcrypt = "*"
 python-dateutil = "*"
-
 faker = "*"
+pytz = "*"
+apscheduler = "*"
 
 [dev-packages]
 

@@ -75,10 +75,19 @@ class CalendarShare(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True) 
     calendar_owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     access_granted_to_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    expiration_time = db.Column(db.DateTime, nullable=True)  # Expiration date/time
 
     def to_dict(self):
         return {
             'id': self.id,
             'calendar_owner_id': self.calendar_owner_id,
-            'access_granted_to_id': self.access_granted_to_id
+            'access_granted_to_id': self.access_granted_to_id,
+            'expiration_time': self.expiration_time.strftime('%Y-%m-%d %H:%M:%S') if self.expiration_time else None
         }
+
+# Define the delete_expired_entries function here
+def delete_expired_entries():
+    expired_entries = CalendarShare.query.filter(CalendarShare.expiration_time < datetime.utcnow()).all()
+    for entry in expired_entries:
+        db.session.delete(entry)
+    db.session.commit()
