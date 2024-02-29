@@ -85,6 +85,7 @@ class EventCreation(Resource):
                 count=count
             )
 
+
             for recurrence_time, recurrence_end_time in recurrences:
                 recurrence_event = Event(
                     title=title,
