@@ -92,9 +92,12 @@ class UserCalendarEvents(Resource):
 api.add_resource(UserCalendarEvents, '/get_shared_calendar/<int:user_id>')
 
 
-class CreateShareEvent(Resource):
-    @jwt_required
-    def get(self, user_id):
-        current_user = get_jwt_identity()
+# class CreateShareEvent(Resource):
+#     @jwt_required
+#     def get(self):
+#         current_user = get_jwt_identity()
+#         data = request.get_json()
+#         access_granted_to_id = data.get('user_id')
+        
         
         
