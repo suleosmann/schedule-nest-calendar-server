@@ -8,7 +8,6 @@ from ..validation import is_valid_email, is_valid_password
 from .. import db  # Import the db instance
 import bcrypt
 
-
 # Create a Blueprint for authentication routes
 bp = Blueprint('auth', __name__)
 
@@ -25,6 +24,13 @@ parser.add_argument('phone_number', type=int, required=False)
 parser.add_argument('profession', type=str, required=False)
 parser.add_argument('about', type=str, required=False)
 
+# Define the update_password_parser directly in auth_routes.py
+update_password_parser = reqparse.RequestParser()
+update_password_parser.add_argument('email', type=str, required=True, help='Email is required')
+update_password_parser.add_argument('new_password', type=str, required=True, help='New Password is required')
+update_password_parser.add_argument('confirm_new_password', type=str, required=True, help='Confirmation of new password is required')
+
+# Use the correct parser for this route
 class SignUp(Resource):
     def post(self):
         data = parser.parse_args()  # Parse request data
@@ -101,95 +107,48 @@ class Logout(Resource):
 # Add the resource to the Api
 api.add_resource(Logout, '/logout')
 
-
-# Define a parser for request data
-password_parser = reqparse.RequestParser()
-update_password_parser = reqparse.RequestParser()
-password_parser.add_argument('email', type=str, required=True, help='Email is required')
-password_parser.add_argument('new_password', type=str, required=True, help='New password is required')
-update_password_parser.add_argument('confirm_new_password', type=str, required=False, help='Confirmation of new password is required')
-
+# Resource for changing user password
 class UpdatePassword(Resource):
     def patch(self):
-        # Parse the request data
-        data = password_parser.parse_args()
-        
+        # Parse the request data using update_password_parser
+        data = update_password_parser.parse_args()
+
         # Extract data from request
         email = data['email']
         new_password = data['new_password']
         confirm_new_password = data['confirm_new_password']
-        
+
         # Validate request data
         if not email or not new_password or not confirm_new_password:
             return {'message': 'Incomplete request data'}, 400
-        
-        # Validate email format
-        if not is_valid_email(email):
-            return {'message': 'Invalid email format'}, 400
-        
-        # Validate password format
-        if not is_valid_password(new_password, email):
-            # Password is invalid
-            return {'message': 'Passwords Cannot be an email'}, 400
-        # Check if passwords match
-        if new_password != confirm_new_password:
-            return {'message': 'Passwords do not match'}, 400
-        
-        # Query user by email
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            return {'message': 'User not found'}, 404
-        
-        # Hash the new password
-        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
-        
-        # Update user's password with the hashed password
-        user.password = hashed_password
-        
-        # Commit changes to the database
-        db.session.commit()
-        
-        return {'message': 'Password updated successfully'}, 200
-    
-# Add the resource to the Api
-api.add_resource(UpdatePassword, '/update_password')
 
-class ChangePassword(Resource):
-    def post(self):
-        # Parse the request data
-        data = password_parser.parse_args()
-        
-        # Extract data from request
-        email = data['email']
-        new_password = data['new_password']
-        
-        # Validate request data
-        if not email or not new_password:
-            return {'message': 'Incomplete request data'}, 400
-        
         # Validate email format
         if not is_valid_email(email):
             return {'message': 'Invalid email format'}, 400
-        
+
         # Validate password format
         if not is_valid_password(new_password, email):
             return {'message': 'Invalid password format'}, 400
-        
+
+        # Check if passwords match
+        if new_password != confirm_new_password:
+            return {'message': 'Passwords do not match'}, 400
+
         # Query user by email
         user = User.query.filter_by(email=email).first()
         if not user:
             return {'message': 'User not found'}, 404
-        
+
         # Hash the new password
         hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
-        
+
         # Update user's password with the hashed password
         user.password = hashed_password
-        
+
         # Commit changes to the database
         db.session.commit()
-        
+
         return {'message': 'Password updated successfully'}, 200
 
-# Add the new route to the API
-api.add_resource(ChangePassword, '/change-password')
+# Add the resource to the Api
+api.add_resource(UpdatePassword, '/update_password')
