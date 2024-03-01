@@ -70,9 +70,6 @@ class CalendarOwnerResource(Resource):
         if access_granted_to_id is None:
             return {'message': 'User not authenticated'}, 401
         
-        # Get current time
-        current_time = datetime.utcnow()
-        
         # Query all calendar shares for the given access_granted_to_id
         calendar_shares = CalendarShare.query.filter_by(access_granted_to_id=access_granted_to_id).all()
         if not calendar_shares:
@@ -80,15 +77,13 @@ class CalendarOwnerResource(Resource):
         
         calendar_owners = []
         for calendar_share in calendar_shares:
-            # Check if the access has expired
-            if calendar_share.expiration_time is None or calendar_share.expiration_time < current_time:
-                # Query the user table to find the user with the specified calendar_owner_id
-                calendar_owner = User.query.get(calendar_share.calendar_owner_id)
-                if calendar_owner:
-                    calendar_owners.append({
-                        'user_id': calendar_owner.id,
-                        'name': calendar_owner.name
-                    })
+            # Query the user table to find the user with the specified calendar_owner_id
+            calendar_owner = User.query.get(calendar_share.calendar_owner_id)
+            if calendar_owner:
+                calendar_owners.append({
+                    'user_id': calendar_owner.id,
+                    'name': calendar_owner.name
+                })
         
         if not calendar_owners:
             return {'message': 'No valid calendar owners found'}, 404
@@ -97,6 +92,7 @@ class CalendarOwnerResource(Resource):
         return calendar_owners, 200
 
 api.add_resource(CalendarOwnerResource, '/get_share_calendar')
+
 
 
 class UserCalendarEvents(Resource):
