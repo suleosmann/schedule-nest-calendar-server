@@ -21,6 +21,8 @@ def format_datetime(dt):
 events_bp = Blueprint('events', __name__)
 api = Api(events_bp)
 
+# ... (your existing imports)
+
 class EventCreation(Resource):
     @jwt_required()  # Require authentication with JWT
     def post(self):
@@ -43,9 +45,8 @@ class EventCreation(Resource):
         start_time_str = data.get('start_time')
         end_time_str = data.get('end_time')
         location = data.get('location')
-        attendees= data.get('attendees')
+        attendees = data.get('attendees')
         recurrence = data.get('recurrence')
-        
 
         # Convert string representations to datetime objects
         start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S")
@@ -53,7 +54,6 @@ class EventCreation(Resource):
 
         # Example conversion from string to integer for byweekday values
         byweekday = [convert_to_weekday_integer(day_str) for day_str in data.get('byweekday', [])]
-       
 
         # Creating a new event
         new_event = Event(
@@ -65,9 +65,6 @@ class EventCreation(Resource):
             recurrence=recurrence,
             created_by=user.id
         )
-        
-        
-
 
         # If recurrence is specified, generate and store recurrences in the database
         if recurrence:
@@ -85,7 +82,6 @@ class EventCreation(Resource):
                 count=count
             )
 
-
             for recurrence_time, recurrence_end_time in recurrences:
                 recurrence_event = Event(
                     title=title,
@@ -101,13 +97,17 @@ class EventCreation(Resource):
         # Adding the event to the database session and committing the changes
         db.session.add(new_event)
         db.session.commit()
-        
-        
-        for attendee_user_id in attendees:
-            attendee = Attendee(event_id=new_event.id, user_id=int(attendee_user_id))
-            db.session.add(attendee)
-        db.session.commit()
 
+        # Check if attendees is not None before iterating
+        if attendees is not None:
+            for attendee_user_id in attendees:
+                attendee = Attendee(event_id=new_event.id, user_id=int(attendee_user_id))
+                db.session.add(attendee)
+            db.session.commit()
+
+        # ... (your existing code)
+
+        # ... (your existing code)
 
         # Include event details in the response
         response_data = {
