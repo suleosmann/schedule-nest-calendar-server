@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, make_response
 from flask_restful import Api, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models import User, Event
+from ..models import User, Event, Attendee
 from datetime import datetime
 from ..recurrence_helper import generate_recurrences
 from .. import db
@@ -43,7 +43,9 @@ class EventCreation(Resource):
         start_time_str = data.get('start_time')
         end_time_str = data.get('end_time')
         location = data.get('location')
+        attendees= data.get('attendees')
         recurrence = data.get('recurrence')
+        
 
         # Convert string representations to datetime objects
         start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S")
@@ -63,10 +65,12 @@ class EventCreation(Resource):
             recurrence=recurrence,
             created_by=user.id
         )
+        
+        
+
 
         # If recurrence is specified, generate and store recurrences in the database
         if recurrence:
-            frequency = data.get('frequency')
             interval = data.get('interval')
             byweekday = data.get('byweekday')
             bymonthday = data.get('bymonthday')
@@ -75,12 +79,12 @@ class EventCreation(Resource):
             recurrences = generate_recurrences(
                 start_time=start_time,
                 recurrence=recurrence,
-                frequency=frequency,
                 interval=interval,
                 byweekday=byweekday,
                 bymonthday=bymonthday,
                 count=count
             )
+
 
             for recurrence_time, recurrence_end_time in recurrences:
                 recurrence_event = Event(
@@ -97,6 +101,13 @@ class EventCreation(Resource):
         # Adding the event to the database session and committing the changes
         db.session.add(new_event)
         db.session.commit()
+        
+        
+        for attendee_user_id in attendees:
+            attendee = Attendee(event_id=new_event.id, user_id=int(attendee_user_id))
+            db.session.add(attendee)
+        db.session.commit()
+
 
         # Include event details in the response
         response_data = {

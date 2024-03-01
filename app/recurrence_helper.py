@@ -2,11 +2,12 @@ from datetime import datetime, timedelta
 from dateutil import rrule
 
 def weekday_str_to_int(day_str):
-    # Map weekday string to integer
-    weekdays_mapping = {'mo': 0, 'tu': 1, 'we': 2, 'th': 3, 'fr': 4, 'sa': 5, 'su': 6}
-    return weekdays_mapping.get(day_str.lower(), 0)  # Default to 0 if not found
+    # Map full weekday names to integer
+    weekdays_mapping = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6}
+    return weekdays_mapping.get(day_str, 0)  # Default to 0 if not found
 
-def generate_recurrences(start_time, recurrence, frequency, interval, byweekday, bymonthday, count):
+
+def generate_recurrences(start_time, recurrence, interval, byweekday, bymonthday, count):
     """
     Generate recurring events based on the start_time and recurrence pattern.
     """
@@ -21,17 +22,25 @@ def generate_recurrences(start_time, recurrence, frequency, interval, byweekday,
     # Adjust the end time based on the start time
     end_time = start_datetime + timedelta(hours=1)  # Adjust this as needed
 
-    # Example: handle daily recurrence for 5 occurrences with a default interval of 1
+    # Calculate the end date based on the count parameter
+    if recurrence == 'weekly':
+        end_datetime = start_datetime + timedelta(weeks=count)
+    elif recurrence == 'monthly':
+        end_datetime = start_datetime + timedelta(days=30 * count)  # Assuming a month is 30 days
+    else:
+        end_datetime = start_datetime + timedelta(days=count)
+
+    # Example: handle daily recurrence for specified duration with a default interval of 1
     if recurrence == 'daily':
         recurrence_rule = rrule.rrule(
             rrule.DAILY,
             dtstart=start_datetime,
-            count=count,
+            until=end_datetime,
             interval=interval or 1  # Default to 1 if interval is not provided
         )
         recurrences = [dt.strftime('%Y-%m-%dT%H:%M:%S') for dt in recurrence_rule]
 
-    # Example: handle weekly recurrence for 5 occurrences on specified weekdays
+    # Example: handle weekly recurrence for specified duration on specified weekdays
     elif recurrence == 'weekly':
         # Convert weekday strings to integers
         byweekday_int = [weekday_str_to_int(day_str) for day_str in byweekday]
@@ -39,26 +48,23 @@ def generate_recurrences(start_time, recurrence, frequency, interval, byweekday,
             rrule.WEEKLY,
             byweekday=byweekday_int,
             dtstart=start_datetime,
-            count=int(count),
+            until=end_datetime,
             interval=int(interval)
         )
         recurrences = [dt.strftime('%Y-%m-%dT%H:%M:%S') for dt in recurrence_rule]
 
-    # Example: handle monthly recurrence for 5 occurrences on specified month days
+    # Example: handle monthly recurrence for specified duration on specified month days
     elif recurrence == 'monthly':
         recurrence_rule = rrule.rrule(
             rrule.MONTHLY,
             bymonthday=bymonthday,
             dtstart=start_datetime,
-            count=count,
+            until=end_datetime,
             interval=interval
         )
         recurrences = [dt.strftime('%Y-%m-%dT%H:%M:%S') for dt in recurrence_rule]
 
     # Adjust the end time for each recurrence
-    recurrences_with_end_time = []
-    for recurrence_time in recurrences:
-        recurrence_end_time = datetime.strptime(recurrence_time, "%Y-%m-%dT%H:%M:%S") + (end_time - start_datetime)
-        recurrences_with_end_time.append((recurrence_time, recurrence_end_time.strftime('%Y-%m-%dT%H:%M:%S')))
+    recurrences_with_end_time = [(recurrence_time, (datetime.strptime(recurrence_time, "%Y-%m-%dT%H:%M:%S") + (end_time - start_datetime)).strftime('%Y-%m-%dT%H:%M:%S')) for recurrence_time in recurrences]
 
     return recurrences_with_end_time
